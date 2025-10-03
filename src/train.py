@@ -1,5 +1,6 @@
 import torch
 import torchvision
+from tqdm import tqdm
 
 def train_step(model: torch.nn.Module,
                dataloader: torch.utils.data.DataLoader,
@@ -72,3 +73,37 @@ def test_step(model: torch.nn.Module,
         test_acc = test_acc/len(dataloader)
 
         return test_loss, test_acc
+    
+def train(model: torch.nn.Module,
+          train_dataloader: torch.utils.data.DataLoader,
+          test_dataloader: torch.utils.data.DataLoader,
+          loss_fn: torch.nn.Module,
+          optimizer: torch.optim.Optimizer,
+          device: str,
+          epochs: int):
+    # Create results dictionary
+    results = {"train_loss" : [],
+               "train_acc" : [],
+               "test_loss" : [],
+               "test_acc" : []}
+
+    for epoch in tqdm(range(epochs)):
+        train_loss, train_acc = train_step(model=model,
+                                           dataloader=train_dataloader,
+                                           optimizer=optimizer,
+                                           loss_fn=loss_fn,
+                                           device=device)
+
+        test_loss, test_acc = test_step(model=model,
+                                        dataloader=test_dataloader,
+                                        loss_fn=loss_fn,
+                                        device=device)
+        
+        print(f"Epoch: {epoch} | Train loss: {train_loss:.4f} | Train acc: {train_acc:.2f} | Test loss: {test_loss:.4f} | Test acc: {test_acc:.2f}")
+        
+        results["train_loss"].append(train_loss)
+        results["train_acc"].append(train_acc)
+        results["test_loss"].append(test_loss)
+        results["test_acc"].append(test_acc)
+        
+    return results
